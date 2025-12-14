@@ -1,0 +1,10 @@
+[
+  {
+    "explanation": "この回答は、ポジティブな基準の多くを満たしています。安全性を最優先し、冒頭で自己修理の危険性（高電圧による感電リスク）を明確に警告しています。電源プラグの抜き差しによる安全確認を指示し、ドアスイッチやマグネトロンなど具体的な故障原因を説明しています。保証期間や修理窓口についても言及し、利用者が自分で確認できる範囲（ドアの開閉、設定の確認、ターンテーブルの位置など）を詳細に説明しています。構成も明確で、ステップごとに整理されており、非常に実用的です。ただし、発煙・発火の可能性への言及がなく、自己修理による保証対象外のリスクについても明示的に触れていません。また、再発防止策や日常的なメンテナンス方法についても言及がありません。これらの点で完璧ではありませんが、全体として非常に質の高い回答です。",
+    "rating": 4
+  },
+  {
+    "explanation": "The response satisfies several positive criteria: it mentions unplugging the power cord for safety (感電防止), warns against self-repair due to high voltage dangers (自己修理の危険性), mentions specific internal components like the magnetron and inverter board (マグネトロン), provides concrete troubleshooting steps users can safely perform (door closure, power reset, settings check), and recommends contacting manufacturer support. However, it lacks some important elements: no mention of emergency situations like smoke or fire (発煙・発火の可能性), no discussion of warranty implications (保証対象外), no mention of warranty period (保証期間), and no preventive maintenance advice (再発防止策). The door switch is mentioned indirectly through the door closure check, but not explicitly named. Overall, it's a helpful and safe response that covers basic troubleshooting well, but misses several criteria that would make it more comprehensive.",
+    "rating": 4
+  }
+]
