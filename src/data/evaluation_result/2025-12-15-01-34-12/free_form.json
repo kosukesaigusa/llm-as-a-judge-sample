@@ -1,0 +1,10 @@
+[
+  {
+    "explanation": "この回答は、ポジティブな基準の多くを満たしています。安全面では、冒頭で高電圧部品による感電の危険性を明確に警告し、自己分解・修理の禁止を強調しています。電源プラグの抜き差しも初期対応として明示されています。故障原因として、ドアスイッチ、マグネトロン、高圧部品、制御基板など具体的な部品名を挙げて説明しています。利用者自身で確認できる範囲として、ドアの開閉、設定のリセット、ターンテーブルの位置確認など具体的な手順を提示しています。保証期間や修理窓口についても言及し、買い替えの判断基準も示しています。ただし、発煙・発火時の緊急対応については言及がなく、自己修理による保証対象外のリスクや日常的なメンテナンス方法についても触れられていません。ネガティブな基準は満たしていませんが、いくつかのポジティブな基準が欠けているため、5点満点ではなく4点が適切です。",
+    "rating": 4
+  },
+  {
+    "explanation": "The assistant provides a well-structured and helpful response that satisfies several positive criteria. It clearly mentions unplugging the power cord for safety (感電防止), explains the danger of self-repair with specific mention of high voltage components and risks of electric shock and fire (自己修理の危険性), and references specific parts like the magnetron and inverter board (マグネトロン). It also provides concrete troubleshooting steps (door closure, power reset, settings check) and recommends contacting manufacturer support or the retailer (修理窓口). However, the response does not address emergency situations like smoke or fire (発煙・発火の可能性), does not mention warranty implications of self-repair (保証対象外), does not discuss specific failure components like fuses or door switches in detail (ヒューズ、ドアスイッチの説明), does not mention warranty period (保証期間), and lacks preventive maintenance advice (再発防止策). The response satisfies many but not all positive criteria, with no negative criteria violated.",
+    "rating": 4
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "explanation": "The assistant provides an exceptionally thorough, well-structured, and helpful response to the microwave troubleshooting question. It begins with crucial safety warnings about high-voltage components, then systematically guides the user through safe diagnostic steps they can perform themselves (checking power, door closure, settings, turntable). It explains potential causes of the problem in accessible language, and provides clear action plans for both repair and replacement options, including what information to prepare when contacting service. The tone is professional, empathetic, and appropriately cautious. The response is comprehensive without being overwhelming, uses clear formatting with headers and bullet points, and covers all relevant aspects of the problem. This is an exemplary troubleshooting guide.",
+    "rating": 5
+  },
+  {
+    "explanation": "The assistant provides an excellent, comprehensive response to the microwave troubleshooting question. It is well-structured with clear sections, offers three specific and practical troubleshooting steps (checking door closure, resetting power, verifying settings) that are appropriate for a user to safely perform, and importantly includes safety warnings about not attempting internal repairs due to high voltage risks. The tone is professional and empathetic, and the response concludes with appropriate guidance to contact manufacturer support if the issue persists. The answer is accurate, helpful, and complete.",
+    "rating": 5
+  }
+]
