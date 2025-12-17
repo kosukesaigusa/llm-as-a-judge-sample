@@ -2,9 +2,9 @@ from typing import List, Optional
 from datetime import datetime
 from ..models import generate
 from .prompt import (
-    SUBJECTIVE_PROMPT_TEMPLATE,
-    FREE_FORM_PROMPT_TEMPLATE,
-    RUBRIC_PROMPT_TEMPLATE,
+    SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE,
+    GENERAL_EVALUATION_PROMPT_TEMPLATE,
+    RUBRIC_EVALUATION_PROMPT_TEMPLATE,
 )
 from ..types import (
     RubricItem,
@@ -90,7 +90,7 @@ def run_subjective_evaluation(
     model_name: str
 ) -> Optional[RatingResult]:
     """主観評価を実行する。"""
-    prompt = SUBJECTIVE_PROMPT_TEMPLATE.replace("<<conversation>>", conversation)
+    prompt = SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE.replace("<<conversation>>", conversation)
     result = _generate_with_retry(
         model_name=model_name,
         prompt=prompt,
@@ -100,28 +100,12 @@ def run_subjective_evaluation(
     return result if isinstance(result, dict) else None
 
 
-def run_free_form_evaluation(
+def run_general_evaluation(
     conversation: str,
-    rubrics: List[RubricItem],
     model_name: str
 ) -> Optional[RatingResult]:
     """自由記述評価を実行する。"""
-    positive_rubrics = [r for r in rubrics if r['points'] > 0]
-    negative_rubrics = [r for r in rubrics if r['points'] < 0]
-    
-    if positive_rubrics:
-        pos_section = "\n".join([f"- {r['criterion']}" for r in positive_rubrics])
-    else:
-        pos_section = "- There are no explicit positive criteria. Focus only on the overall usefulness and quality of the response."
-        
-    if negative_rubrics:
-        neg_section = "\n".join([f"- {r['criterion']}" for r in negative_rubrics])
-    else:
-        neg_section = "- There are no explicit negative criteria. Only check that there are no obvious errors or harmful issues."
-
-    prompt = FREE_FORM_PROMPT_TEMPLATE.replace("<<conversation>>", conversation) \
-        .replace("<<positive_criteria>>", pos_section) \
-        .replace("<<negative_criteria>>", neg_section)
+    prompt = GENERAL_EVALUATION_PROMPT_TEMPLATE.replace("<<conversation>>", conversation)
     
     result = _generate_with_retry(
         model_name=model_name,
@@ -163,7 +147,7 @@ def run_rubric_evaluation(
         # criterionWithPoints の形式: "[points] criterion"
         criterion_text = f"[{rubric_item['points']}] {rubric_item['criterion']}"
         
-        prompt = RUBRIC_PROMPT_TEMPLATE.replace("<<conversation>>", conversation) \
+        prompt = RUBRIC_EVALUATION_PROMPT_TEMPLATE.replace("<<conversation>>", conversation) \
             .replace("<<rubric_item>>", criterion_text)
         
         result = _generate_with_retry(

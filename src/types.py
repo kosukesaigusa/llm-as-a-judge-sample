@@ -11,6 +11,11 @@ class RubricItem(TypedDict):
     criterion: str
     points: int
 
+class GenerationDatasetItem(TypedDict):
+    """LLM応答作成前のデータ項目（プロンプトとシステム指示）。"""
+    prompts: List[PromptItem]
+    generator_system_instructions: List[str]
+
 class PromptDatasetItem(TypedDict):
     """LLM応答作成前のデータ項目（プロンプトのみ）。"""
     prompts: List[PromptItem]
@@ -21,7 +26,7 @@ class EvaluationDatasetItem(PromptDatasetItem):
     llm_response_text: str
 
 class RatingResult(TypedDict):
-    """主観評価・自由記述評価の結果（スコアと説明）。"""
+    """主観評価・自由記述評価の結果（点数と説明）。"""
     explanation: str
     rating: int
 
@@ -41,7 +46,7 @@ class EvaluationResultByRubric(BaseModel):
     @computed_field
     @property
     def signed_score(self) -> int:
-        """当該ルーブリックに対するスコア（criteria_met に応じた加点または減点）を取得する。"""
+        """当該ルーブリックに対する点数（criteria_met に応じた加点または減点）を取得する。"""
         return self.rubric['points'] if self.criteria_met else 0
     
     @computed_field
@@ -71,13 +76,13 @@ class EvaluationOutput(BaseModel):
     @computed_field
     @property
     def total_score(self) -> int:
-        """総合スコア。"""
+        """総合点数。"""
         return sum(result.signed_score for result in self.result_by_rubrics)
     
     @computed_field
     @property
     def theoretical_score(self) -> int:
-        """理論上の最大スコア（ルーブリックの得点が正のものの合計）。"""
+        """理論上の最大点数（ルーブリックの得点が正のものの合計）。"""
         return sum(
             result.rubric['points']
             for result in self.result_by_rubrics
@@ -87,7 +92,7 @@ class EvaluationOutput(BaseModel):
     @computed_field
     @property
     def score_rate(self) -> float:
-        """理論上の最大スコアに対する総合スコアの割合。"""
+        """理論上の最大点数に対する総合点数の割合。"""
         if self.theoretical_score > 0:
             return self.total_score / self.theoretical_score
         return 0.0

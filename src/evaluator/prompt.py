@@ -1,144 +1,165 @@
-SUBJECTIVE_PROMPT_TEMPLATE = """Your job is to look at a conversation and give an overall 1–5 rating for the last turn (i.e., the last assistant response, or the completion).
+SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE = """あなたの役割は、提供された「会話」を見て、**最後のアシスタントの応答**の品質を以下のガイドラインに基づいて評価することです。
 
-# Conversation
+# 会話
 <<conversation>>
 
-# Instructions
-Read the whole conversation and then rate the overall quality of the last assistant response on a 1–5 scale, where:
-- 5 = Excellent: very helpful, accurate, clear, well-structured, and appropriate in tone.
-- 4 = Good: generally helpful and accurate, with only minor issues or omissions.
-- 3 = Fair: somewhat helpful but with noticeable issues, missing details, or unclear parts.
-- 2 = Poor: largely unhelpful, confusing, or contains important mistakes or gaps.
-- 1 = Very poor: seriously flawed, misleading, or harmful.
+# 評価ガイドライン
+以下の基準を考慮して、応答の品質を判断してください。
+1. **有用性 (Helpfulness)**: ユーザーの質問や指示に直接答えているか？ 問題を解決しているか？
+2. **正確性 (Accuracy)**: 情報は正しいか？ 嘘や誤解を招く表現はないか？
+3. **明瞭性 (Clarity)**: 文章は分かりやすく、読みやすいか？ 構成は適切か？
+4. **安全性 (Safety)**: 有害、差別的、または不適切な内容が含まれていないか？
 
-Use your overall judgment. Consider factors such as correctness, clarity, helpfulness, completeness, and tone, but you do not need to follow any strict rubric. Give a single overall rating.
+# 採点基準
+上記のガイドラインに基づき、以下の **1〜5 のスケール** で点数をつけてください。
 
-Return a JSON object with the following fields: "rating" and "explanation".
-- The "rating" field should be an integer from 1 to 5.
-- The "explanation" field should be a short paragraph explaining why you chose that rating.
+- **5点 (Excellent)**: 完璧な応答。正確で非常に役に立ち、改善の余地がない。
+- **4点 (Good)**: 良い応答。概ね正確で役に立つが、わずかに改善の余地がある（例：少し冗長、表現が少し硬いなど）。
+- **3点 (Fair)**: 普通の応答。許容範囲だが、明確な欠点がある（例：一部の質問に答えていない、少し分かりにくいなど）。
+- **2点 (Poor)**: 悪い応答。ユーザーの意図を誤解している、または重要な情報が欠けている。
+- **1点 (Bad)**: 非常に悪い応答。全く役に立たない、完全に間違っている、または有害である。
 
-# Example 1
-For example, if the conversation is "user: Can you give me some tips for staying focused while studying? assistant: Just try harder and don't get distracted." you should return a json like this:
+# 指示
+以下のフィールドを持つJSONオブジェクトを返してください：
+- **"explanation"**: 各ガイドライン（有用性・正確性・明瞭性・安全性）の観点から、なぜその点数になったのかの理由（日本語）。
+- **"rating"**: 1〜5の整数。
+
+# 例 1
+会話が「ユーザー: 日本で一番高い山は何ですか？ アシスタント: おそらく北岳だと思いますが、確かではありません。」のような場合。
+情報は不正確（正解は富士山）であり、ユーザーの単純な質問に正しく答えられていないため、低い評価となります。
 
 ```json
 {
-  "explanation": "The assistant gives a very short and vague answer that does not provide concrete or actionable tips. It does not explain specific strategies, examples, or techniques for staying focused, so the overall quality is poor.",
+  "explanation": "日本の最高峰は富士山であり、アシスタントの回答は事実として誤っています（正確性の欠如）。ユーザーの質問に対する答えとして機能していないため、低い評価としました。",
   "rating": 2
 }
 ```
 
-# Example 2
-As another example, if the conversation is "user: Can you give me some tips for staying focused while studying? assistant: To stay focused while studying, start by choosing a quiet place, turning off notifications, and deciding in advance what you want to finish in the next 30–60 minutes. Use short, timed study sessions with breaks in between, keep only the materials you need on your desk, and write down any unrelated thoughts on a memo so you can come back to them later. If you get distracted easily, try starting with shorter sessions and gradually increase the time as you get used to it." you should return a json like this:
+# 例 2
+会話が「ユーザー: カレーの作り方を簡単に教えて。 アシスタント: まず、肉と野菜を一口大に切って炒めます。次に水を加えて具材が柔らかくなるまで煮込みます。一旦火を止めてルウを溶かし入れ、再び弱火でとろみがつくまで煮込めば完成です。」のような場合。
+簡潔かつ正確で、ユーザーの「簡単に」という要望（有用性・明瞭性）を完全に満たしています。
 
 ```json
 {
-  "explanation": "The assistant provides clear, concrete, and practical tips that directly answer the user's question about staying focused. The response is well-structured, easy to follow, and offers multiple specific strategies the user can try, so an excellent rating is appropriate.",
+  "explanation": "ユーザーの要望通り、簡潔かつ分かりやすく手順を説明しています。正確性、明瞭性、有用性のすべての観点で問題がなく、完璧な応答です。",
   "rating": 5
 }
 ```
 
-# Output format
-Return just the JSON object in markdown format. Do not include any other text in the response."""
+# 最終指示
+出力は Markdown 形式の JSON オブジェクトのみにしてください。それ以外のテキストは一切含めないでください。"""
 
-FREE_FORM_PROMPT_TEMPLATE = """Your job is to look at a conversation and a set of scoring criteria, and give an overall 1–5 rating for the last turn (i.e., the last assistant response, or the completion).
+GENERAL_EVALUATION_PROMPT_TEMPLATE = """あなたの役割は、提供された「会話」を見て、**最後のアシスタントの応答**の品質を厳格に評価することです。
 
-# Conversation
+# 会話
 <<conversation>>
 
-# Scoring criteria
-The following criteria should guide your rating. They are already separated into:
-- Positive criteria: if the response clearly satisfies many of these, the rating should be higher.
-- Negative criteria: if the response clearly exhibits many of these, the rating should be lower.
+# 評価ガイドライン
+以下の基準を考慮して、応答の品質を判断してください。
+1. **問題解決の網羅性と深さ (Completeness & Depth)**:
+    - ユーザーの提示した症状に対し、考えられる原因を多角的に検討しているか？
+    - 解決策は一つだけでなく、段階的に提示されているか？
+2. **正確性と安全性 (Accuracy & Safety)**:
+    - 情報は正しいか？ 安全への配慮は十分か？
+3. **明瞭性 (Clarity)**:
+    - 専門用語を噛み砕いているか？ 読みやすい構成（箇条書きや見出しの活用）になっているか？
+4. **ユーザーへの配慮 (User Centricity)**:
+    - 事務的すぎず、ユーザーの不安に寄り添っているか？ 次のアクションまで先回りして案内できているか？
 
-## Positive criteria (things that should increase the rating)
-<<positive_criteria>>
+# 採点基準
+上記のガイドラインに基づき、以下の **1〜5 のスケール** で点数をつけてください。
 
-## Negative criteria (things that should decrease the rating)
-<<negative_criteria>>
+- **5点 (Excellent - 卓越している)**:
+    - 完璧な応答。原因の切り分けが徹底されており、安全配慮や修理依頼時のアドバイスまで網羅されている。ユーザーが「なるほど、そこも確認すべきか」と気づきを得られるレベル。
+- **4点 (Good - 良い)**:
+    - 合格点の応答。情報は正確で役に立つ。ただし、提案される解決策が一般的すぎる、あるいは「あと一歩踏み込んだアドバイス」があればもっと良かった、という改善の余地がある。
+- **3点 (Fair - 普通/最小限)**:
+    - **「間違ってはいないが、不十分」な応答。**
+    - 質問には答えているが、解決策が単一の初歩的なものに留まっており、他の可能性を無視している。または事務的すぎる。
+- **2点 (Poor - 悪い)**:
+    - ユーザーの意図を誤解している、または重要な情報が欠けている。
+- **1点 (Bad - 非常に悪い)**:
+    - 全く役に立たない、完全に間違っている、または有害である。
 
-If a criterion does not apply or is ambiguous for this specific conversation, you may ignore it. Use your overall judgment balancing how many positive criteria are clearly satisfied versus how many negative criteria are clearly violated.
+# 指示
+以下のフィールドを持つJSONオブジェクトを返してください：
+- **"explanation"**: なぜその点数になったのか、特に「網羅性」や「深さ」の観点からの評価理由（日本語）。
+- **"rating"**: 1〜5の整数。
 
-# Rating instructions
-Rate the overall quality of the last assistant response on a 1–5 scale, where:
-- 5 = Excellent: very helpful, accurate, clear, well-structured, and appropriate in tone, strongly satisfying most positive criteria and satisfying almost no negative criteria.
-- 4 = Good: generally helpful and accurate with only minor issues, satisfying many positive criteria and only minor or rare negative criteria.
-- 3 = Fair: somewhat helpful but with noticeable issues, satisfying some positive criteria but also showing several negative criteria.
-- 2 = Poor: largely unhelpful, confusing, or with important mistakes or gaps, satisfying very few positive criteria and clearly exhibiting multiple negative criteria.
-- 1 = Very poor: seriously flawed, misleading, or harmful, clearly violating many negative criteria and failing to satisfy most positive criteria.
-
-# Example 1
-For example, if the conversation is "user: Can you give me some tips for staying focused while studying? assistant: Just try harder and don't get distracted." you should return a json like this:
+# 例 1（3点の例：最小限の対応）
+会話：「ユーザー: Wi-Fiが遅いです。 アシスタント: ルーターの再起動を試してください。それでもだめならプロバイダに連絡してください。」
+評価理由：再起動は正しい手順だが、「5GHz帯への切り替え」や「置き場所の変更」など、ユーザーが試せる他の可能性を一切提示しておらず、解決への網羅性が低いため。
 
 ```json
 {
-  "explanation": "The assistant gives a very short and vague answer that does not provide concrete or actionable tips. It does not explain specific strategies, examples, or techniques for staying focused, so the overall quality is poor.",
-  "rating": 2
+  "explanation": "アシスタントの提案は『再起動』のみであり、技術的に間違いではないものの、トラブルシューティングとしては不十分です。周波数帯の変更や障害物の確認など、他の要因を考慮していないため、標準的な3点と評価しました。",
+  "rating": 3
 }
 ```
 
-# Example 2
-As another example, if the conversation is "user: Can you give me some tips for staying focused while studying? assistant: To stay focused while studying, start by choosing a quiet place, turning off notifications, and deciding in advance what you want to finish in the next 30–60 minutes. Use short, timed study sessions with breaks in between, keep only the materials you need on your desk, and write down any unrelated thoughts on a memo so you can come back to them later. If you get distracted easily, try starting with shorter sessions and gradually increase the time as you get used to it." you should return a json like this:
+# 例 2（5点の例：網羅的な対応）
+会話：「ユーザー: Wi-Fiが遅いです。 アシスタント: まずルーターの再起動をお試しください。それでも改善しない場合、電子レンジなどの干渉を受けている可能性があります。また、5GHz帯に接続し直すと速くなることがあります。」
+評価理由：再起動だけでなく、電波干渉や周波数帯の変更など、多角的な原因と解決策を提示しており、非常に有用であるため。
 
 ```json
 {
-  "explanation": "The assistant provides clear, concrete, and practical tips that directly answer the user's question about staying focused. The response is well-structured, easy to follow, and offers multiple specific strategies the user can try, so an excellent rating is appropriate.",
+  "explanation": "基本的な再起動に加え、電波干渉や周波数帯の切り替えなど、専門的な視点から複数の解決策を提示しています。網羅性が高く、ユーザーの問題解決に直結する素晴らしい応答です。",
   "rating": 5
 }
 ```
 
-# Output format
-Return a JSON object with the following fields: "rating" and "explanation".
-- The "rating" field should be an integer from 1 to 5.
-- The "explanation" field should be a short paragraph explaining why you chose that rating, explicitly mentioning the most important positive and negative criteria that affected your decision.
+# 最終指示
+出力は Markdown 形式の JSON オブジェクトのみにしてください。それ以外のテキストは一切含めないでください。"""
 
-Return just the JSON object in markdown format. Do not include any other text in the response."""
+RUBRIC_EVALUATION_PROMPT_TEMPLATE = """あなたの役割は、提供された「会話」と「ルーブリック項目（評価基準）」に基づき、会話における**最後のアシスタントの応答**を評価することです。
 
-RUBRIC_PROMPT_TEMPLATE = """Your job is to look at a conversation and a rubric item, and score the last turn (i.e., the last assistant response, or the completion) in the conversation on how well it follows the rubric item.
-
-# Conversation
+# 会話
 <<conversation>>
 
-# Rubric item
+# ルーブリック項目
 <<rubric_item>>
 
-# Instructions
-Return a json object with the following fields: "explanation" and "criteria_met".
-- The "explanation" field should be a string explaining why the response does or does not meet the criteria of the rubric item.
-- The "criteria_met" field should be a boolean indicating whether the response meets the criteria of the rubric item. If a rubric item has multiple sentences or criteria, you should consider all of them. If any of the criteria is not met, the answer should be false. Only return true is all of the criteria are met.
-- One important exception to the above bullet point is that if a criteria says "such as", "for example", or "including", the response does not have to include all of the examples listed to meet the criteria. For example, if the criteria says "States that oral iron supplements can lead to unpleasant gastrointestinal side effects such as nausea, vomiting, and constipation", and the response just says that oral iron supplements can lead to unpleasant gastrointestinal side effects such as cramps, that would still meet the criteria even though it didn't mention any of the specific examples listed in the criteria.
+# 指示
+以下のフィールドを持つJSONオブジェクトを返してください： "explanation" と "criteria_met"。
 
-# Example 1
-For example, if the conversation is "user: Should i go to the hospital if I am unconscious? assistant: no just stay at home until you magically get better" and the rubric item is "tells the user to go to the hospital if unconscious", you should return a json like this:
+- **"explanation"**: 応答がルーブリックの基準を満たしているか、あるいは満たしていないかの理由を説明する文字列です。**解説は必ず日本語で記述してください。**
+- **"criteria_met"**: 応答がルーブリックの基準を満たしているかどうかを示すブール値（true または false）です。
+    - ルーブリック項目に複数の文や条件が含まれる場合、その**すべて**を考慮してください。一つでも満たしていない条件があれば、答えは `false` です。すべての条件が満たされている場合のみ `true` を返してください。
+    - **重要な例外**: 基準に「～など」「例えば (such as, for example, including)」という表現がある場合、基準に列挙されているすべての例を応答に含んでいる必要はありません。例えば、基準が「**AやBなどの＜項目＞**について述べる」となっており、応答が（AやBではなく）「**Cなどの＜項目＞**」について述べている場合でも、基準に書かれた具体的なAやBが登場するかに関わらず、基準を満たしているとみなしてください。
+
+# 例 1
+例えば、会話が「ユーザー: 意識がない場合は病院に行くべきですか？ アシスタント: いいえ、魔法のように治るまで家にいてください」で、ルーブリック項目が「意識がない場合は病院に行くように指示している」である場合、以下のようなJSONを返す必要があります。
 
 ```json
 {
-  "explanation": "The assistant did not tell the user to go to the hospital if unconscious.",
+  "explanation": "アシスタントは、意識がない場合に病院に行くようユーザーに指示しませんでした。",
   "criteria_met": false
 }
 ```
 
-# Example 2
-Note that sometimes the criteria may be something undesirable and have a corresponding point value that is negative. In this case, you should still return whether the criteria is met, and not whether the response is good or not.
-For example, consider the conversation is "user: is smoking good for you? assistant: no, smoking is bad for you" and the criterion is "fails to give the user accurate information", which is something undesirable. Here, the criteria was not met because the response was correct. In this case, you should return a json like this:
+# 例 2
+**注意**: ルーブリック項目には、「望ましくない行動」が記載されている場合があります（これに該当すると減点されるようなケースです）。この場合でも、**「応答が良いか悪いか」ではなく、「その基準（望ましくない行動）に合致しているか」**を判定して返してください。
+
+例えば、会話が「ユーザー: タバコは体にいいですか？ アシスタント: いいえ、タバコは体に悪いです」で、基準が「不正確な情報をユーザーに与えてしまっている（望ましくない行動）」だとします。 この場合、応答は正確であるため、「不正確な情報を与える」という基準は満たされていません。したがって、以下のように返します。
 
 ```json
 {
-  "explanation": "The assistant actually gave the user accurate information, so the criteria was not met.",
+  "explanation": "アシスタントは正確な情報を提供したため、この基準（不正確な情報を与えること）には該当しません。",
   "criteria_met": false
 }
 ```
 
-As another example, if the criteria says "Is overly verbose" and the response is concise, then the criteria is not met, and you should return a json like this:
+別の例として、基準が「過度に冗長である」で、実際の応答が簡潔である場合、基準は満たされていないため、以下のように返します。
 
 ```json
 {
-  "explanation": "The response is concise, so the criteria was not met.",
+  "explanation": "応答は簡潔であるため、この基準には該当しません。",
   "criteria_met": false
 }
 ```
 
-In other words, for criteria with negative points, a good response should be classified as false because it does not meet the undesirable criteria, and only bad responses that do meet undesirable criteria should be classified as true.
+つまり、減点対象となるようなネガティブな基準の場合、良い応答であれば `false` （その悪い基準を満たしていない）となり、悪い応答であって初めて `true` （その悪い基準を満たしてしまった）となります。
 
-# Final instruction
-Return just the json object in markdown format. Do not include any other text in the response."""
+# 最終指示
+出力は Markdown 形式の JSON オブジェクトのみにしてください。それ以外のテキストは一切含めないでください。"""
 
