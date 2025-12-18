@@ -1,17 +1,17 @@
-from typing import List, Optional
 from datetime import datetime
+from typing import Any, cast
+
 from ..models import generate
+from ..types import (
+    EvaluationDatasetItem,
+    EvaluationOutput,
+    EvaluationResultByRubric,
+    RatingResult,
+)
 from .prompt import (
-    SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE,
     GENERAL_EVALUATION_PROMPT_TEMPLATE,
     RUBRIC_EVALUATION_PROMPT_TEMPLATE,
-)
-from ..types import (
-    RubricItem,
-    RatingResult,
-    EvaluationDatasetItem,
-    EvaluationResultByRubric,
-    EvaluationOutput,
+    SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE,
 )
 
 # 評価の出力スキーマ。
@@ -38,11 +38,11 @@ RUBRIC_SCHEMA = {
 def _generate_with_retry(
     model_name: str,
     prompt: str,
-    schema: dict,
-    required_keys: List[str],
+    schema: dict[str, Any],
+    required_keys: list[str],
     max_retries: int = 5,
     show_available_keys: bool = False
-) -> Optional[dict]:
+) -> dict[str, Any] | None:
     """
     指定されたスキーマに従った JSON を生成し、必要なキーが存在するまでリトライする。
     
@@ -88,7 +88,7 @@ def _generate_with_retry(
 def run_subjective_evaluation(
     conversation: str,
     model_name: str
-) -> Optional[RatingResult]:
+) -> RatingResult | None:
     """主観評価を実行する。"""
     prompt = SUBJECTIVE_EVALUATION_PROMPT_TEMPLATE.replace("<<conversation>>", conversation)
     result = _generate_with_retry(
@@ -97,13 +97,15 @@ def run_subjective_evaluation(
         schema=RATING_SCHEMA,
         required_keys=['explanation', 'rating']
     )
-    return result if isinstance(result, dict) else None
+    if result is None:
+        return None
+    return cast(RatingResult, result)
 
 
 def run_general_evaluation(
     conversation: str,
     model_name: str
-) -> Optional[RatingResult]:
+) -> RatingResult | None:
     """自由記述評価を実行する。"""
     prompt = GENERAL_EVALUATION_PROMPT_TEMPLATE.replace("<<conversation>>", conversation)
     
@@ -113,14 +115,16 @@ def run_general_evaluation(
         schema=RATING_SCHEMA,
         required_keys=['explanation', 'rating']
     )
-    return result if isinstance(result, dict) else None
+    if result is None:
+        return None
+    return cast(RatingResult, result)
 
 
 def run_rubric_evaluation(
     data: EvaluationDatasetItem,
     model_name: str,
-    prompt_id: Optional[str] = None
-) -> Optional[EvaluationOutput]:
+    prompt_id: str | None = None
+) -> EvaluationOutput | None:
     """
     ルーブリック評価を実行して EvaluationOutput を返す。
     
@@ -142,7 +146,7 @@ def run_rubric_evaluation(
     conversation += f"assistant: {data['llm_response_text']}"
     
     # 各ルーブリックに対して評価を実行する。
-    result_by_rubrics: List[EvaluationResultByRubric] = []
+    result_by_rubrics: list[EvaluationResultByRubric] = []
     for rubric_item in data['rubrics']:
         # criterionWithPoints の形式: "[points] criterion"
         criterion_text = f"[{rubric_item['points']}] {rubric_item['criterion']}"
@@ -160,7 +164,10 @@ def run_rubric_evaluation(
         
         # リトライ後も期待通りの JSON が取得できなかった場合。
         if result is None:
-            print(f"Error: Failed to get valid result after specified number of attempts for criterion: {rubric_item['criterion']}")
+            print(
+                f"Error: Failed to get valid result after specified number of attempts for criterion: "
+                f"{rubric_item['criterion']}"
+            )
             return None
         
         result_by_rubrics.append(

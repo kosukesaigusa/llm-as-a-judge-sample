@@ -12,3 +12,26 @@ dependencies = [
   "tqdm>=4.66.0",
   "ipywidgets>=8.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "ruff>=0.14.9",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"src/evaluator/prompt.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
